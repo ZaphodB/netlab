@@ -1,0 +1,9 @@
+#
+# Fetch Cumulus NVUE yaml configuration files
+#
+- name: save cumulus nvue config to file on switch
+  shell: sonic-cli -c 'show running-configuration | no-more'
+  register: sonic_run_config
+
+- set_fact:
+    ansible_net_config: "{{ sonic_run_config.stdout }}"

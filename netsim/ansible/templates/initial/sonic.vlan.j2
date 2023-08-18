@@ -1,0 +1,6 @@
+!
+{% for vname,vdata in vlans.items() %}
+interface Vlan{{ vdata.id }}
+  description {{ vname }}
+!
+{% endfor +%}

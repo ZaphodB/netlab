@@ -1,0 +1,64 @@
+hostname {{ inventory_hostname }}
+!
+lldp enable
+!
+{% if vrfs is defined %}
+{% include 'sonic.vrf.j2' +%}
+!
+{% endif %}
+{% if vlans is defined %}
+{% include 'sonic.vlan.j2' +%}
+!
+{% endif %}
+!
+interface Loopback0
+{% if 'ipv4' in loopback %}
+ ip address {{ loopback.ipv4|ipaddr('address') }} {{ loopback.ipv4|ipaddr('netmask') }}
+{% endif %}
+{% if 'ipv6' in loopback %}
+ ipv6 enable
+ ipv6 address {{ loopback.ipv6|upper }}
+{% endif %}
+!
+{% for l in interfaces|default([]) %}
+interface {{ l.ifname }}
+ no shutdown
+{% if l.name is defined %}
+ description {{ l.name }}{{ " ["+l.role+"]" if l.role is defined else "" }}
+{% elif l.type|default("") == "stub" %}
+ description Stub interface
+{% endif %}
+{% if l.mtu is defined %}
+{%   if min_mtu is defined and min_mtu > l.mtu %}
+ mtu {{ min_mtu }}
+{%   else %}
+ mtu {{ l.mtu }}
+{%   endif %}
+{% endif %}
+{#
+    Set interface addresses: IPv4
+#}
+{% if 'ipv4' in l %}
+{%   if l.ipv4 == True %}
+ ip unnumbered {{ loopback_name|default('Loopback0') }}
+{%   elif l.ipv4|ipv4 %}
+ ip address {{ l.ipv4|ipaddr('address') }} {{ l.ipv4|ipaddr('netmask') }}
+{%   else %}
+! Invalid IPv4 address {{ l.ipv4 }}
+{%   endif %}
+{% endif %}
+{#
+    Set interface addresses: IPv6
+#}
+{% if 'ipv6' in l %}
+{%   if l.ipv6 == True %}
+ ipv6 enable
+{%   elif l.ipv6|ipv6 %}
+ ipv6 address {{ l.ipv6|upper }}
+{%   else %}
+! Invalid IPv6 address {{ l.ipv6 }}
+{%   endif %}
+{% endif %}
+!
+{% endfor %}
+

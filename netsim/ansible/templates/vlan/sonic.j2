@@ -1,0 +1,10 @@
+{% for ifdata in interfaces if ifdata.vlan is defined %}
+!
+interface {{ ifdata.ifname }}
+{% if ifdata.vlan.access_id is defined %}
+ switchport access Vlan {{ ifdata.vlan.access_id }}
+{% endif %}
+{%   if ifdata.vlan.trunk_id is defined %}
+ switchport trunk allowed Vlan{{ ifdata.vlan.trunk_id|join(", ") }}
+{%   endif %}
+{% endfor %}
